@@ -1,6 +1,6 @@
 /*
  * A "social" module for Aetos 
- * $Id: emote.c,v 1.1 2002/11/02 11:56:53 semprini Exp $
+ * $Id: emote.c,v 1.2 2002/11/02 13:01:45 semprini Exp $
  */
 
 #include <stdlib.h>
@@ -57,6 +57,7 @@ static void do_privmsg(event_t event)
 	source = (char *) malloc (strlen (ircmsg -> pre) + 1);
 	if (sscanf (ircmsg -> pre, "%[^!]!%*s", source) != 1)
 	{
+		free (source);
 		free (cmd);
 		return;
 	}
@@ -75,8 +76,11 @@ static void do_privmsg(event_t event)
 		asprintf (&errmsg, "Database error: %s", PQresultErrorMessage (res));
 		efuns -> send_message (fd, dest, errmsg);
 		PQclear (res);
+		free (target);
+		free (source);
 		free (errmsg);
 		free (cmd);
+		free (query);
 		return;
 	}
 	if (PQntuples (res) > 0)
@@ -110,6 +114,8 @@ static void do_privmsg(event_t event)
 		}
 	}
 	PQclear (res);
+	free (target);
+	free (source);
 	free (cmd);
 	free (query);
 }
