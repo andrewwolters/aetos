@@ -3,7 +3,7 @@
  *
  * modules -- support for modules in aetos and event handling
  *
- * $Id: modules.c,v 1.3 2002/09/09 19:27:22 andrewwo Exp $
+ * $Id: modules.c,v 1.4 2002/09/10 13:40:46 andrewwo Exp $
  */
 
 
@@ -15,27 +15,55 @@
 #include <csp/slist.h>
 #include <irc/irc.h>
 
-#include "mem.h"
-#include "event.h"
 #include "modules.h"
+#include "event.h"
+#include "mem.h"
 #include "utility.h"
 #include "error.h"
 #include "efuns.h"
 
 
 /* Some local defines of structures */
-intern slist_t(callback_list, callback_st);
-
 intern struct load_tbl
 {	void *(*bootfunc)();
 	void *so_handle;
 };
 
-/* Setup the structs */
+/* Fill the efun table */
+struct efun_st _efun_table =
+{   /* Mod related */
+    mod_initialize,
+    mod_mainloop,
+    mod_exit,
+
+    /* Message/event related */
+	get_from_event,
+    irc_send_message,
+    source_privmsg,
+    is_command,
+
+    /* Callbacks */
+    add_callback,
+    remove_callback,
+
+    /* String utility functions */
+    tokenize_string,
+    duplicate_string,
+
+    /* Memory utilisation */
+    tmalloc,
+    trealloc,
+    tfree,
+    tcalloc,
+
+    /* Misc */
+    get_gst
+};
+
+/* Setup the other structs */
 intern list_t(module_list, module_st) mod_list = LIST_NIL_LIST;
 
 private pth_key_t mod_key = PTH_KEY_INIT;
-intern pth_key_t callback_key = PTH_KEY_INIT;
 
 private unsigned int next_id = 1;
 
@@ -52,17 +80,9 @@ private unsigned int unique_id(void)
 	return ret;
 }
 
-/* Destroy thread local callback list */
-private void destroy_callback_list(void *arg)
-{	struct callback_list *cblist = (struct callback_list *) arg;
-	slist_delete(cblist, callback_st, tfree);
-	tfree(cblist);
-}
-
 /* Initialize ACS */
 intern void init_modules (void)
 {	module_t core;
-	pth_key_create(&callback_key, destroy_callback_list);
 	pth_key_create(&mod_key, NULL);
 
 	/* Install the core in the module list */
@@ -77,19 +97,12 @@ intern void init_modules (void)
 
 /* Initialisation function for a module */
 export int mod_initialize (char *name, int major, int minor)
-{	struct callback_list *cblist;
-	module_t mod;
-
-	/* The key must be set for each thread */
-	if ((struct callback_list *) pth_key_getdata(callback_key) == NULL)
-	{	cblist = tmalloc(sizeof(struct callback_list));
-		slist_instantiate(cblist);
-		pth_key_setdata(callback_key, (const void *) cblist);
-	}
+{	module_t mod;
 	mod = (module_t) pth_key_getdata(mod_key);
 	strcpy(mod -> name, name);
 	mod -> major = major;
 	mod -> minor = minor;
+	init_callback_list();
 	return 1;
 }
 
@@ -99,7 +112,7 @@ export void mod_exit (void)
 }
 
 /* Search for a module with id */
-export module_t mod_search (int id)
+intern module_t mod_search (int id)
 {	module_t m;
 	list_foreach(&mod_list, m)
 	{	if (m -> id == id)
@@ -109,25 +122,24 @@ export module_t mod_search (int id)
 }
 
 /* Print a list of all the loaded modules */
-export void mod_listing (char *dest)
+intern void mod_listing (char *dest)
 {	module_t m;
 	char buf[100];
 	bzero(buf, 100 * sizeof(char));
 	irc_send_message (AETOS->serversocket, dest, "[CORE] Loaded modules:");
 	list_foreach(&mod_list, m)
 	{	sprintf(buf, "[CORE] %d : %s - %d.%d", m->id, m->name, m->major, m->minor);
-		notice(buf);
 		irc_send_message (AETOS->serversocket, dest, buf);
 	}
 }
 
 /* Return own mod handle */
-export module_t mod_self (void)
+intern module_t mod_self (void)
 {	return ((module_t) pth_key_getdata(mod_key));
 }
 
 /* Return own id */
-export int mod_self_id (void)
+intern int mod_self_id (void)
 {	module_t mod = ((module_t) pth_key_getdata(mod_key));
 	return mod -> id;
 }
@@ -137,7 +149,7 @@ export int mod_self_id (void)
  */
 export void mod_mainloop (void)
 {	event_t event;
-	while (TRUE)
+	while (1)
 	{	next_event(&event);
 		dispatch_event(event);
 		destroy_event(event);
@@ -159,6 +171,7 @@ private void *mod_load_2 (void *arg)
 	list_insert_head(&mod_list, mod);
 	if ((module_t) pth_key_getdata(mod_key) == NULL)
 		pth_key_setdata(mod_key, (const void *) mod);
+	init_event_queue();
 	load_info -> bootfunc(efuns, 0, NULL);
 
 	/* NOTREACHED */

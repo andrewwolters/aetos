@@ -3,7 +3,7 @@
  *
  * Miscellaneous standard defines, must always be included
  *
- * $Id: aetos.h,v 1.1 2002/08/30 15:55:50 andrewwo Exp $
+ * $Id: aetos.h,v 1.2 2002/09/10 13:40:46 andrewwo Exp $
  */
 
 #ifndef AETOS_AETOS_H
@@ -24,5 +24,7 @@ struct gs_table_st
 
 #define AETOS	(_aetos_gst)
 extern gs_table _aetos_gst;
+
+gs_table get_gst (void);
 
 #endif /* AETOS_AETOS_H */

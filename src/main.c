@@ -2,7 +2,7 @@
  * Aetos - the most aesthetically correct IRC bot ever
  *
  * Application top level section
- * $Id: main.c,v 1.3 2002/09/09 19:27:22 andrewwo Exp $
+ * $Id: main.c,v 1.4 2002/09/10 13:40:46 andrewwo Exp $
  */
 
 #include "common.h"
@@ -111,7 +111,7 @@ int main (int argc, char **argv)
 {	options_rec *options;
 	pth_attr_t attr;
 	pth_t self;
-	char *rcfile;
+	char *rcfile __attribute__((unused));
 	int fd; 
 
 	/* Get commandline options and read configuration file */
@@ -125,10 +125,10 @@ int main (int argc, char **argv)
 	*/
 	setup_gst (&AETOS);
  	
-	/* Initalize Aetos: start internal services */
+	/* Initalize Aetos: start internal services (order is important!) */
 	pth_init();
-	init_modules();
 	init_events();
+	init_modules();
 	add_callback (EvtPrivmsgMask, do_cmd);
 	add_callback (EvtPongMask, do_pong);
 
@@ -150,5 +150,7 @@ int main (int argc, char **argv)
 	aetos_main_loop ();
 	
 	pth_exit(0);
-	exit(0); /* NOTREACHED but stops compiler from complaining (fix: attributes) */
+
+	/* Stop compiler from complaining (fix: attributes) */
+	exit(0); /* NOTREACHED */
 }

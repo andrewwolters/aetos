@@ -3,7 +3,7 @@
  *
  * modules -- support for modules in aetos
  *
- * $Id: modules.h,v 1.3 2002/09/09 19:27:22 andrewwo Exp $
+ * $Id: modules.h,v 1.4 2002/09/10 13:40:46 andrewwo Exp $
  */
 
 #ifndef AETOS_MODULES_H
@@ -12,7 +12,13 @@
 #include <pth.h>
 #include <csp/list.h>
 #include <csp/slist.h>
-#include "common.h"
+#include <irc/irc.h>
+#include "aetos.h"
+#include "mem.h"
+#include "event.h"
+#include "utility.h"
+#include "efuns.h"
+
 
 /* Some defines */
 #define NIL_MODULE		NULL

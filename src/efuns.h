@@ -3,13 +3,11 @@
  *
  * efuns - All the exported functions
  *
- * $Id: efuns.h,v 1.2 2002/08/31 13:40:17 andrewwo Exp $
+ * $Id: efuns.h,v 1.3 2002/09/10 13:40:46 andrewwo Exp $
  */
 
 #ifndef AETOS_EFUNS_H
 #define AETOS_EFUNS_H
-
-#include "aetos.h"
 
 /*
  * Create a script to autogenerate this file (and /mod/mod.h) from
@@ -19,27 +17,34 @@
 /* External function table */
 typedef struct efun_st *efun_tbl;
 struct efun_st
-{	int (*mod_initialize) (char *, int, int);
+{	/* Mod related */
+	int (*mod_initialize) (char *, int, int);
 	void (*mod_mainloop) (void);
 	void (*mod_exit) (void);
+
+	/* Message/event related */
+	void (*get_from_event) (event_t, void **);
 	void (*send_message) (int, char *, char *);
+	char *(*source_privmsg) (ircmsg_evt);
+	int (*is_command) (char *, char *);
+
+	/* Callbacks */
+	void (*add_callback) (event_mask, callback_proc);
+	void (*remove_callback) (event_mask, callback_proc);
+
+	/* String utility functions */
+	void (*tokenize_string) (char *, char **, int);
+	char *(*duplicate_string) (char *);
+
+	/* Memory utilisation */
+	void *(*tmalloc) (size_t);
+	void *(*trealloc) (void *, size_t);
+	void (*tfree) (void *);
+	void *(*tcalloc) (int, size_t);
+
+	/* Misc */
 	gs_table (*get_gst) (void);
 };
 
-/* Import the functions which have to be exported to the modules */
-import int mod_initialize (char *, int, int);
-import void mod_mainloop (void);
-import void mod_exit (void);
-import void irc_send_message (int, char *, char *);
-import gs_table get_gst (void);
-
-/* Fill the table */
-struct efun_st _efun_table =
-{	mod_initialize,
-	mod_mainloop,
-	mod_exit,
-	irc_send_message,
-	get_gst
-};
 
 #endif /* AETOS_EFUNS_H */
