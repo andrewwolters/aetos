@@ -3,7 +3,7 @@
  *
  * modules -- support for modules in aetos
  *
- * $Id: mod.h,v 1.2 2002/09/10 13:46:45 andrewwo Exp $
+ * $Id: mod.h,v 1.3 2002/09/14 23:14:03 semprini Exp $
  */
 
 #ifndef AETOS_MOD_H
@@ -30,6 +30,7 @@ struct gs_table_st
     char *botusername;          /* Registered username */
     char *botrealname;          /* Our Real name */
     char *servername;           /* Name server connected to */
+		char *channelname;					/* Name of channel connected to */
     unsigned short serverport;      /* Port of irc server */
     int serversocket;           /* R/W socket */
 };

@@ -3,7 +3,7 @@
  *
  * Miscellaneous standard defines, must always be included
  *
- * $Id: aetos.h,v 1.2 2002/09/10 13:40:46 andrewwo Exp $
+ * $Id: aetos.h,v 1.3 2002/09/14 23:14:03 semprini Exp $
  */
 
 #ifndef AETOS_AETOS_H
@@ -18,6 +18,7 @@ struct gs_table_st
 	char *botusername;			/* Registered username */
 	char *botrealname;			/* Our Real name */
 	char *servername;			/* Name server connected to */
+	char *channelname;	/* Name of channel */
 	unsigned short serverport;		/* Port of irc server */
 	int serversocket;			/* R/W socket */
 };

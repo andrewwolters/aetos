@@ -2,7 +2,7 @@
  * Aetos - the most aesthetically correct IRC bot ever
  *
  * Application top level section
- * $Id: main.c,v 1.4 2002/09/10 13:40:46 andrewwo Exp $
+ * $Id: main.c,v 1.5 2002/09/14 23:14:03 semprini Exp $
  */
 
 #include "common.h"
@@ -80,6 +80,7 @@ private void setup_gst(gs_table *t)
 	(*t) -> botusername = duplicate_string(DEFAULT_USER);
 	(*t) -> botrealname = duplicate_string(DEFAULT_REAL);
 	(*t) -> servername = duplicate_string(DEFAULT_SERVER);
+	(*t) -> channelname = duplicate_string(DEFAULT_CHANNEL);
 	(*t) -> serverport = 6667;
 }
 
@@ -108,14 +109,12 @@ private void aetos_main_loop ()
 
 /* And here is the start of life */
 int main (int argc, char **argv)
-{	options_rec *options;
-	pth_attr_t attr;
+{	pth_attr_t attr;
 	pth_t self;
 	char *rcfile __attribute__((unused));
 	int fd; 
 
 	/* Get commandline options and read configuration file */
-	options = get_options (argc, argv);
 	/*
 	if (! (options -> rcfile))
 		rcfile = DEFAULT_RCFILE;

@@ -1,6 +1,6 @@
 /*
  * A test "hello world" module for Aetos
- * $Id: hello.c,v 1.2 2002/09/10 13:46:45 andrewwo Exp $
+ * $Id: hello.c,v 1.3 2002/09/14 23:14:03 semprini Exp $
  */
 
 #define MOD_NAME hello
@@ -30,7 +30,7 @@ void *hello_init (efun_tbl tbl, int argc, char **argv)
 
 	efuns -> mod_initialize ("hello", 0, 1);
 	efuns -> add_callback (EvtPrivmsgMask, do_privmsg);
-	efuns -> send_message (fd, "#aetos", "Hello World!");
+	efuns -> send_message (fd, gst -> channelname, "Hello World!");
 
 	efuns -> mod_mainloop();
 	return NULL;
