@@ -2,7 +2,7 @@
  * Aetos - the most aesthetically correct IRC bot ever
  *
  * Application top level section
- * $Id: main.c,v 1.5 2002/09/14 23:14:03 semprini Exp $
+ * $Id: main.c,v 1.6 2002/11/01 20:50:02 semprini Exp $
  */
 
 #include "common.h"
@@ -123,6 +123,7 @@ int main (int argc, char **argv)
 	hash_resource_file (rcfile);
 	*/
 	setup_gst (&AETOS);
+	get_options (argc, argv, &AETOS);
  	
 	/* Initalize Aetos: start internal services (order is important!) */
 	pth_init();
@@ -138,7 +139,7 @@ int main (int argc, char **argv)
 	irc_connect (AETOS->serversocket, AETOS->botname, AETOS->botusername, 0,
 		AETOS->botrealname);
 	notice("IRC handshake complete, connected to server");
-	irc_join (AETOS->serversocket, DEFAULT_CHANNEL);
+	irc_join (AETOS->serversocket, AETOS->channelname);
 	notice("IRC joined channel");
 
 	/* Enter application loop */

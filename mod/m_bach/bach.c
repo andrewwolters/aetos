@@ -1,17 +1,17 @@
 /*
  * Bach module for aetos
- * $Id: bach.c,v 1.1 2002/09/14 23:14:03 semprini Exp $
+ * $Id: bach.c,v 1.2 2002/11/01 20:50:01 semprini Exp $
  */
 
 #include <stdio.h>
 #include <strings.h>
 #include <stdlib.h>
 #include <time.h>
-
 #include "pgsql/libpq-fe.h"
-#include "../mod.h"
 
 #define MOD_NAME bach
+
+#include "../mod.h"
 
 static efun_tbl efuns;
 static int fd;
@@ -52,6 +52,7 @@ void find_cantata (char *sql_expression, int *bwv, char **name)
 		{ *bwv = -1;
 		}
 	}
+	PQclear (res);
 	free (query);
 }
 
@@ -91,6 +92,7 @@ static void do_privmsg (event_t event)
   		    name = strdup (PQgetvalue (res, nr, 1));
         }
   		}
+			PQclear (res);
     }
     // Jan 6: Epiphany
     else if ((t -> tm_mon == 0) && (t -> tm_mday == 6))

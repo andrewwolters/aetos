@@ -2,7 +2,7 @@
  * Aetos - the most aesthetically correct IRC bot ever
  *
  * irc -- implementation of RFC 2812 
- * $Id: irc.c,v 1.1 2002/08/30 16:04:11 andrewwo Exp $
+ * $Id: irc.c,v 1.2 2002/11/01 20:50:00 semprini Exp $
  */
 
 #include "common.h"
@@ -158,8 +158,7 @@ int irc_is_ping (message_rec *msg)
 int irc_is_closing (message_rec *msg)
 { return ((strncmp (msg -> command, "ERROR", 5) == 0) &&
          (strstr (msg -> params, "Closing Link") != NULL)) ||
-         ((strlen (msg -> prefix) == 0) &&
-          (strlen (msg -> command) == 0));
+         (strlen (msg -> prefix) == 0);
 }
 
 /*
