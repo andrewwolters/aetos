@@ -3,7 +3,7 @@
  *
  * modules -- support for modules in aetos and event handling
  *
- * $Id: modules.c,v 1.1 2002/08/30 15:55:50 andrewwo Exp $
+ * $Id: modules.c,v 1.2 2002/08/31 13:40:17 andrewwo Exp $
  */
 
 
@@ -22,19 +22,23 @@
 #include "efuns.h"
 
 
-/* Some local defines and setup of structures */
-list_t(module_list, module_st) mod_list = LIST_NIL_LIST;
-slist_t(callback_list, callback_st);
+/* Some local defines of structures */
+intern slist_t(callback_list, callback_st);
 
-private unsigned int next_id = 1;
-private pth_key_t mod_key = PTH_KEY_INIT;
-intern pth_key_t callback_key = PTH_KEY_INIT;
-
-intern efun_tbl efuns = &_efun_table;
 intern struct load_tbl
 {	void *(*bootfunc)();
 	void *so_handle;
 };
+
+/* Setup the structs */
+intern list_t(module_list, module_st) mod_list = LIST_NIL_LIST;
+
+private pth_key_t mod_key = PTH_KEY_INIT;
+intern pth_key_t callback_key = PTH_KEY_INIT;
+
+private unsigned int next_id = 1;
+
+private efun_tbl efuns = &_efun_table;
 
 /* Create a unique id */
 private unsigned int unique_id(void)
@@ -114,6 +118,18 @@ export int mod_self_id (void)
 	return mod -> id;
 }
 
+/* Module's main loop. This is where the events are grabbed
+ * from the queue and dispatched to the apropriate callbacks
+ */
+export void mod_mainloop (void)
+{	event_t event;
+	while (TRUE)
+	{	next_event(&event);
+		dispatch_event(event);
+		destroy_event(event);
+	}
+}
+
 /* Second stage module loader */
 private void *mod_load_2 (void *arg)
 {	module_t mod;
@@ -150,7 +166,7 @@ intern int mod_load (char *name, int argc, char *argv[])
 	dlerror();
  	if (! (so_handle = dlopen (buf, RTLD_LAZY)) )
 	{	error = dlerror();
-		fprintf (stderr, "dlopen() - %s\n", error);
+		warning(error);
 		tfree((void *) error);
 		return 0;
 	}
@@ -161,7 +177,7 @@ intern int mod_load (char *name, int argc, char *argv[])
 #endif
 	if (! (bootfunc = (void *(*)()) dlsym (so_handle, buf)) )
 	{	error = dlerror();
-		fprintf (stderr, "dlsym() - %s\n", error);
+		warning(error);
 		dlclose (so_handle);
 		tfree((void *) error);
 		return 0;
@@ -200,7 +216,7 @@ intern int mod_unload (int id)
 	dlerror();
 	if (dlclose(mod -> so_hnd))
 	{	error = dlerror();
-		fprintf (stderr, "dlclose() - %s", error);
+		warning(error);
 		tfree((void *) error);
 		return 0;
 	}

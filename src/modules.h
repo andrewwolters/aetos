@@ -3,7 +3,7 @@
  *
  * modules -- support for modules in aetos
  *
- * $Id: modules.h,v 1.1 2002/08/30 15:55:50 andrewwo Exp $
+ * $Id: modules.h,v 1.2 2002/08/31 13:40:17 andrewwo Exp $
  */
 
 #ifndef AETOS_MODULES_H
@@ -37,6 +37,7 @@ void init_modules (void);
 int mod_load (char *file, int argc, char *argv[]);
 int mod_unload (int id);
 int mod_initialize (char *name, int major, int minor);
+void mod_mainloop (void);
 void mod_exit (void);
 module_t mod_search (int id); 
 module_t mod_self (void); 

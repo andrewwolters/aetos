@@ -2,7 +2,7 @@
  * Aetos - the most aesthetically correct IRC bot ever
  *
  * Application top level section
- * $Id: main.c,v 1.1 2002/08/30 15:55:50 andrewwo Exp $
+ * $Id: main.c,v 1.2 2002/08/31 13:40:17 andrewwo Exp $
  */
 
 #include "common.h"
@@ -16,17 +16,15 @@
 // #include "resources.h"
 #include "options.h"
 #include "event.h"
+#include "modules.h"
 #include "mem.h"
 #include "system.h"
 #include "error.h"
-// #include "modules.h"
 
-	/* Global declarations */
-
+/* Global declarations */
 gs_table _aetos_gst;
 
-	/* Callbacks and helper functions */
-
+/* Callbacks and helper functions */
 private void do_pong (event_t e)
 {	notice ("Ping received, ponging...");
 	irc_pong (AETOS->serversocket, e->e.ircmsg.param);
@@ -36,6 +34,7 @@ private void do_cmd (event_t e)
 {	char *argv[8];
 	char dest[20];
 
+	notice("Doing do_cmd");
 /*	source_privmsg(e -> privmsg, &dest);
 	tokenize_string(e -> privmsg.mesg, &argv, 8);
 	if (is_command(argv[1], "quit"))
@@ -65,10 +64,10 @@ private void do_cmd (event_t e)
  */
 private void setup_gst(gs_table *t)
 {	*t = tmalloc(sizeof(struct gs_table_st));
-	(*t) -> botname = ckstrdup("aetos");
-	(*t) -> botusername = ckstrdup("aetos");
-	(*t) -> botrealname = ckstrdup("aetos");
-	(*t) -> servername = ckstrdup("irc.fluim.net");
+	(*t) -> botname = ckstrdup(DEFAULT_NICK);
+	(*t) -> botusername = ckstrdup(DEFAULT_USER);
+	(*t) -> botrealname = ckstrdup(DEFAULT_REAL);
+	(*t) -> servername = ckstrdup(DEFAULT_SERVER);
 	(*t) -> serverport = 6667;
 }
 
@@ -78,21 +77,25 @@ export gs_table get_gst(void)
 
 private void aetos_main_loop ()
 {	message_rec *reply;
-	event_t e;
+	event_t event;
 
-	mod_load("hello");
-	mod_load("bye");
+//	mod_load("hello");
+//	mod_load("bye");
 
 	while (TRUE)
 	{	reply = irc_get_message (AETOS->serversocket);
-		e = new_event (EvtIRCMsg, reply->command, reply->params, reply->prefix);
-		add_event (e);
+		event = new_event (EvtIRCMsg, reply->prefix, reply->command, reply->params);
+		add_event(event);
+
+		/* Process the event in the core */
+		dispatch_event(event);
+		destroy_event(event);
         free_message_rec (reply);
+		pth_yield(NULL);
 	}
 }
 
-	/* And here is the start of life */
-
+/* And here is the start of life */
 int main (int argc, char **argv)
 {	options_rec *options;
 	pth_attr_t attr;
@@ -115,8 +118,8 @@ int main (int argc, char **argv)
 	pth_init();
 	init_modules();
 	init_events();
-	// add_callback (EvtPrivmsgMask, do_cmd);
-	// add_callback (EvtPongMask, do_pong);
+	add_callback (EvtPrivmsgMask, do_cmd);
+	add_callback (EvtPongMask, do_pong);
 
 	/* Connect to server and do irc handshaking */
 	if ((fd = open_connection (AETOS->servername, AETOS->serverport)) < 0)

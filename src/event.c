@@ -3,7 +3,7 @@
  *
  * event -- event handling subsystem
  *
- * $Id: event.c,v 1.1 2002/08/30 15:55:50 andrewwo Exp $
+ * $Id: event.c,v 1.2 2002/08/31 13:40:17 andrewwo Exp $
  */
 
 #include "aetos.h"
@@ -24,7 +24,7 @@
 extern int mod_self_id(void);
 extern pth_key_t callback_key;
 
-/* Setup event queue and event_mask_map */
+/* Define queue structure, event_mask_map and callback structure */
 struct queue_st
 {   SLIST_LINK(queue_st);
     int id;
@@ -32,22 +32,26 @@ struct queue_st
     event_mask mask;
 };
 
-slist_t(qlist_st, queue_st) *quelist;
-slist_t(callback_list, callback_st);
-
 struct event_mask_map
 {	event_mask mask;
 	event_type type;
 	char *param;
-} mapping[] =
-{   {	EvtNilMask, EvtNil, NIL },
-	{   EvtMessageMask, EvtIRCMsg, NIL },
+};
+
+slist_t(callback_list, callback_st);
+
+/* Setup queue list and event/mask mapping */
+slist_t(qlist_st, queue_st) *quelist;
+
+struct event_mask_map mapping[] =
+{   {	EvtNilMask, EvtNil, NULL },
+	{   EvtMessageMask, EvtIRCMsg, NULL },
     {   EvtPongMask, EvtIRCMsg, "PING" },
     {   EvtPrivmsgMask, EvtIRCMsg, "PRIVMSG" },
     {   EvtNoticeMask, EvtIRCMsg, "NOTICE" },
     {   EvtJoinMask, EvtIRCMsg, "JOIN" },
-    {   EvtTimeoutMask, EvtTimeout, NIL },
-    {   0, 0, NIL }
+    {   EvtTimeoutMask, EvtTimeout, NULL },
+    {   0, 0, NULL }
 };
 
 /* Initialize event subsystem */
@@ -61,16 +65,17 @@ intern int init_events ()
 private int event_mask_match(event_mask mask, event_t ev)
 {	int i;
 	for (i = 0; mapping[i].mask; i++)
-	{	if ((checkflag(mask, mapping[i].mask)) && (mapping[i].type == ev -> type))
-		{	if (ev -> type == EvtIRCMsg)
-				return ( (strncmp(mapping[i].param, ev -> e.ircmsg.cmd, 10) == 0) );
-			else
-				return TRUE;
+	{	if ((mask == (mapping[i].mask & mask)) && (ev -> type == mapping[i].type))
+		{	if (mapping[i].param)
+			{	if (ev -> type == EvtIRCMsg)
+					return ( (strcmp(mapping[i].param, ev -> e.ircmsg.cmd) == 0) );
+			}
+			return TRUE;
 		}
 	}
 	return FALSE;
 }
-
+		
 /* Create an event */
 intern event_t new_event (event_type type, ...)
 {	va_list ap;
@@ -142,7 +147,6 @@ intern void add_event (event_t event)
 			sdeque_insert_tail(&queue -> evq, ev);
 		}
 	}
-	destroy_event (event);
 }
 
 /* Retrieve next event from event queue from this module */
@@ -166,20 +170,32 @@ intern void dispatch_event(event_t event)
 	callback_t cb;
 	cblist = pth_key_getdata(callback_key);
 	slist_foreach(cblist, cb)
-	{	if (event -> type & cb -> mask) /* Mask includes event -> type */
-			(*cb -> callback) (event); /* call callback */
+	{	if (event_mask_match(cb -> mask, event)) /* Mask includes event -> type */
+			/* call callback */
+			(*cb -> callback) (event);
 	}
 }
 
 /* Add a callback routine to certain types of events */
 intern void add_callback (event_mask mask, callback_proc proc)
 {	struct callback_list *cblist;
+	struct queue_st *queue;
 	callback_t cb;
+	int id;
+
+	/* Add the mask & calbackproc to this thread's callback list */
 	if ((cblist = pth_key_getdata(callback_key)) == NULL) fatal("akjsdhfjaksdhf", 1);
 	cb = tmalloc(sizeof(struct callback_st));
 	cb -> callback = proc;
 	cb -> mask = mask;
 	slist_insert_head(cblist, cb);
+
+	/* Add the mask to the mask of this thread's event queue */
+	id = mod_self_id();
+	slist_foreach(quelist, queue)
+	{	if (queue -> id == id)
+			setflag (queue -> mask, mask);
+	}
 }
 
 

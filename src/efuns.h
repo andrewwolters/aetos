@@ -3,7 +3,7 @@
  *
  * efuns - All the exported functions
  *
- * $Id: efuns.h,v 1.1 2002/08/30 15:55:50 andrewwo Exp $
+ * $Id: efuns.h,v 1.2 2002/08/31 13:40:17 andrewwo Exp $
  */
 
 #ifndef AETOS_EFUNS_H
@@ -19,21 +19,24 @@
 /* External function table */
 typedef struct efun_st *efun_tbl;
 struct efun_st
-{	void (*mod_initialize) (char *, int, int);
+{	int (*mod_initialize) (char *, int, int);
+	void (*mod_mainloop) (void);
 	void (*mod_exit) (void);
 	void (*send_message) (int, char *, char *);
 	gs_table (*get_gst) (void);
 };
 
 /* Import the functions which have to be exported to the modules */
-// import void mod_initialize (char *, int, int);
-// import void mod_exit (void);
+import int mod_initialize (char *, int, int);
+import void mod_mainloop (void);
+import void mod_exit (void);
 import void irc_send_message (int, char *, char *);
 import gs_table get_gst (void);
 
 /* Fill the table */
 struct efun_st _efun_table =
 {	mod_initialize,
+	mod_mainloop,
 	mod_exit,
 	irc_send_message,
 	get_gst
