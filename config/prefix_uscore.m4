@@ -1,4 +1,4 @@
-AC_DEFUN(AETOS_SYS_PREFIX_USCORE,
+AC_DEFUN([AETOS_SYS_PREFIX_USCORE],
 [AC_CACHE_CHECK([for _ prefix in symbol table],
 ac_cv_sys_prefix_uscore,
 [ac_cv_sys_prefix_uscore=no
