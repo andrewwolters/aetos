@@ -3,7 +3,7 @@
  *
  * event -- event handling subsystem
  *
- * $Id: event.c,v 1.4 2002/09/10 13:40:46 andrewwo Exp $
+ * $Id: event.c,v 1.5 2004/09/21 15:19:22 semprini Exp $
  */
 
 #include "aetos.h"
@@ -46,6 +46,8 @@ struct event_mask_map mapping[] =
     {   EvtNoticeMask,		EvtIRCMsg,		"NOTICE" },
     {   EvtJoinMask,		EvtIRCMsg,		"JOIN" },
     {   EvtTimeoutMask,		EvtTimeout,		NULL },
+		{		EvtPartMask,		EvtIRCMsg,		"PART" },
+		{		EvtQuitMask,		EvtIRCMsg,		"QUIT" },
     {   0,					0,				NULL }
 };
 

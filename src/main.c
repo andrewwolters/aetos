@@ -2,7 +2,7 @@
  * Aetos - the most aesthetically correct IRC bot ever
  *
  * Application top level section
- * $Id: main.c,v 1.6 2002/11/01 20:50:02 semprini Exp $
+ * $Id: main.c,v 1.7 2004/09/21 15:19:22 semprini Exp $
  */
 
 #include "common.h"
@@ -73,6 +73,97 @@ private void do_cmd (event_t e)
 	tfree(dest);
 }
 
+private void do_join (event_t e)
+{
+	ircmsg_evt *ircmsg;
+	char *source;
+
+  get_from_event(e, (void **) &ircmsg);
+	source = (char *) malloc (strlen (ircmsg -> pre));
+	sscanf (ircmsg -> pre, "%[^!]!%*s", source);
+
+	if (strcmp (source, AETOS -> botname) != 0)
+	{
+		AETOS -> names = (char **) realloc (AETOS -> names,
+			++(AETOS -> nr_names) * sizeof (char *));
+		AETOS -> names [AETOS -> nr_names - 1] = duplicate_string (source); 
+	}
+
+	tfree (source);
+}
+
+private void do_leave (event_t e)
+{
+	ircmsg_evt *ircmsg;
+	char *source;
+
+  get_from_event(e, (void **) &ircmsg);
+	source = (char *) malloc (strlen (ircmsg -> pre));
+	sscanf (ircmsg -> pre, "%[^!]!%*s", source);
+
+	fprintf (stderr, "Part: %s\n", source);
+
+	if (strcmp (source, AETOS -> botname) != 0)
+	{
+		int i;
+		for (i = 0; i < AETOS -> nr_names; i++)
+		{
+			fprintf (stderr, "Parting, name %d is %s and ", i, AETOS -> names [i]);
+			if (strcmp (source, AETOS -> names [i]) == 0)
+			{
+				fprintf (stderr, "it\n");
+				strcpy (AETOS -> names [i], AETOS -> names [AETOS -> nr_names - 1]);
+				tfree (AETOS -> names [AETOS -> nr_names - 1]);
+				AETOS -> names = (char **) realloc (AETOS -> names,
+					--(AETOS -> nr_names) * sizeof (char *));
+			}
+			else
+				fprintf (stderr, "not it\n");
+		}
+	}
+
+	tfree (source);
+}
+
+private void do_message (event_t e)
+{
+	ircmsg_evt *ircmsg;
+
+  get_from_event(e, (void **) &ircmsg);
+	/* NAMES list: 353 */
+	if (strcmp (ircmsg -> cmd, "353") == 0)
+	{
+		/* Find the first colon thst's where the names start */
+		char *c = strchr (ircmsg -> param, ':') + 1,
+			*tmp = (char *) malloc (strlen (ircmsg -> param));		
+		int i = 0, j;
+		while (i < strlen (c))
+		{
+			/* Operator */
+			if (c [i] == '@')
+				i++;
+			/* No clue what this means */
+			else if (c [i] == '+')
+				i++;
+			for (j = i; c [j] != ' '; j++)
+				tmp [j - i] = c [j];	
+			tmp [j - i] = '\0';
+			AETOS -> names = (char **) realloc (AETOS -> names,
+				++(AETOS -> nr_names) * sizeof (char *));
+			AETOS -> names [AETOS -> nr_names - 1] = duplicate_string (tmp);
+			i = j + 1;
+		}
+		tfree (tmp);
+	}
+	/* End of NAMES list: 366 */
+	else if (strcmp (ircmsg -> cmd, "366") == 0)
+	{
+		int i;
+		for (i = 0; i < AETOS -> nr_names; i++)
+			fprintf (stderr, "Name %d: %s\n", i + 1, AETOS -> names [i]);
+	}
+}
+
 /* Fill the global state table */
 private void setup_gst(gs_table *t)
 {	*t = tmalloc(sizeof(struct gs_table_st));
@@ -82,6 +173,8 @@ private void setup_gst(gs_table *t)
 	(*t) -> servername = duplicate_string(DEFAULT_SERVER);
 	(*t) -> channelname = duplicate_string(DEFAULT_CHANNEL);
 	(*t) -> serverport = 6667;
+	(*t) -> names = NULL;
+	(*t) -> nr_names = 0;
 }
 
 /* A module must be able to grab the state table */
@@ -131,6 +224,10 @@ int main (int argc, char **argv)
 	init_modules();
 	add_callback (EvtPrivmsgMask, do_cmd);
 	add_callback (EvtPongMask, do_pong);
+	add_callback (EvtJoinMask, do_join);
+	add_callback (EvtMessageMask, do_message);
+	add_callback (EvtPartMask, do_leave);
+	add_callback (EvtQuitMask, do_leave);
 
 	/* Connect to server and do irc handshaking */
 	if ((fd = open_connection (AETOS->servername, AETOS->serverport)) < 0)

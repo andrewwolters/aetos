@@ -3,7 +3,7 @@
  *
  * This include file is to prevent a lot of dependencies
  *
- * $Id: eventtypes.h,v 1.1 2002/09/14 21:15:55 andrewwo Exp $
+ * $Id: eventtypes.h,v 1.2 2004/09/21 15:19:22 semprini Exp $
  */
 
 #ifndef AETOS_EVENTTYPES_H
@@ -30,6 +30,8 @@ typedef long int event_mask;
 #define	EvtNoticeMask		bit(4)
 #define	EvtJoinMask			bit(5)
 #define	EvtTimeoutMask		bit(6)
+#define EvtPartMask			bit(7)
+#define EvtQuitMask			bit(8)
 
 /* Event types */
 typedef struct nil_evt
