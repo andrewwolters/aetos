@@ -3,7 +3,7 @@
  *
  * utility -- miscelaneous useful functions
  *
- * $Id: utility.c,v 1.1 2002/09/14 21:15:55 andrewwo Exp $
+ * $Id: utility.c,v 1.2 2002/09/14 21:57:59 semprini Exp $
  */
 
 #include "aetos.h"
@@ -33,10 +33,14 @@ export char *duplicate_string (char *str)
  */
 export char *source_privmsg (ircmsg_evt mesg)
 {	char *dest;
-    if (mesg.param[0] == '#')
-        dest = duplicate_string(mesg.param);
-    else
-        dest = duplicate_string(mesg.pre);
+  char *argv[1];
+	if (mesg.param[0] == '#')
+	{
+		tokenize_string (mesg.param, argv, 1);
+		dest = duplicate_string (argv [0]);
+	}
+	else
+		dest = duplicate_string(mesg.pre);
 	return dest;
 }
 

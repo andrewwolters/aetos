@@ -2,12 +2,13 @@
  * Aetos - the most aesthetically correct IRC bot ever
  *
  * options -- handles command-line options
- * $Id: options.c,v 1.2 2002/09/09 19:27:22 andrewwo Exp $
+ * $Id: options.c,v 1.3 2002/09/14 21:57:59 semprini Exp $
  */
 
 #include "aetos.h"
 
 #include <string.h>
+#include <unistd.h>
 
 #include "mem.h"
 #include "utility.h"
