@@ -3,7 +3,7 @@
  *
  * utility -- miscelaneous useful functions
  *
- * $Id: utility.c,v 1.3 2004/09/21 11:58:48 semprini Exp $
+ * $Id: utility.c,v 1.4 2004/09/21 13:45:45 semprini Exp $
  */
 
 #include "aetos.h"
@@ -45,7 +45,7 @@ export char *source_privmsg (ircmsg_evt mesg)
 		 * Quick hack here for extracting this, not sure if it's quite all right (andrewwo?)
 		 */
 		char nick [strlen (mesg.pre)];
-		sscanf (mesg.pre, "%[^!]!%*s", &nick);
+		sscanf (mesg.pre, "%[^!]!%*s", nick);
 		dest = duplicate_string(nick);
 	}
 	return dest;
