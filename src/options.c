@@ -2,7 +2,7 @@
  * Aetos - the most aesthetically correct IRC bot ever
  *
  * options -- handles command-line options
- * $Id: options.c,v 1.1 2002/08/30 15:55:50 andrewwo Exp $
+ * $Id: options.c,v 1.2 2002/09/09 19:27:22 andrewwo Exp $
  */
 
 #include "aetos.h"
@@ -10,7 +10,7 @@
 #include <string.h>
 
 #include "mem.h"
-#include "system.h"
+#include "utility.h"
 #include "options.h"
 
 static void usage (char *program_name)
@@ -58,11 +58,11 @@ options_rec *get_options (int argc, char **argv)
 options_rec *make_options_rec (char *server, char *nick, char *user, char *real,
                                char *channel, unsigned short port)
 { options_rec *retval = (options_rec *) tmalloc (sizeof (options_rec));
-  retval -> server_name = ckstrdup (server); 
-  retval -> nickname = ckstrdup (nick);
-  retval -> username = ckstrdup (user);
-  retval -> realname = ckstrdup (real);
-  retval -> channel = ckstrdup (channel);
+  retval -> server_name = duplicate_string (server); 
+  retval -> nickname = duplicate_string (nick);
+  retval -> username = duplicate_string (user);
+  retval -> realname = duplicate_string (real);
+  retval -> channel = duplicate_string (channel);
   retval -> port = port;
   return retval;
 }

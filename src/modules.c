@@ -3,7 +3,7 @@
  *
  * modules -- support for modules in aetos and event handling
  *
- * $Id: modules.c,v 1.2 2002/08/31 13:40:17 andrewwo Exp $
+ * $Id: modules.c,v 1.3 2002/09/09 19:27:22 andrewwo Exp $
  */
 
 
@@ -13,12 +13,13 @@
 #include <pth.h>
 #include <csp/list.h>
 #include <csp/slist.h>
+#include <irc/irc.h>
 
-#include "system.h"
-#include "error.h"
 #include "mem.h"
-#include "modules.h"
 #include "event.h"
+#include "modules.h"
+#include "utility.h"
+#include "error.h"
 #include "efuns.h"
 
 
@@ -107,6 +108,19 @@ export module_t mod_search (int id)
 	return NIL_MODULE;
 }
 
+/* Print a list of all the loaded modules */
+export void mod_listing (char *dest)
+{	module_t m;
+	char buf[100];
+	bzero(buf, 100 * sizeof(char));
+	irc_send_message (AETOS->serversocket, dest, "[CORE] Loaded modules:");
+	list_foreach(&mod_list, m)
+	{	sprintf(buf, "[CORE] %d : %s - %d.%d", m->id, m->name, m->major, m->minor);
+		notice(buf);
+		irc_send_message (AETOS->serversocket, dest, buf);
+	}
+}
+
 /* Return own mod handle */
 export module_t mod_self (void)
 {	return ((module_t) pth_key_getdata(mod_key));
@@ -127,6 +141,8 @@ export void mod_mainloop (void)
 	{	next_event(&event);
 		dispatch_event(event);
 		destroy_event(event);
+		pth_yield(NULL);
+		pth_cancel_point();
 	}
 }
 
@@ -146,6 +162,7 @@ private void *mod_load_2 (void *arg)
 	load_info -> bootfunc(efuns, 0, NULL);
 
 	/* NOTREACHED */
+	return NULL;
 }
 
 /* Open the shared library and bootstraps the module
@@ -161,13 +178,13 @@ intern int mod_load (char *name, int argc, char *argv[])
 
 	/* Administrative setup and load/resolv of the module */
 	sprintf (buf, "%s/%s%s/%s%s", MOD_DIR, MOD_DIR_PREFIX, name, name, MOD_EXT);
-	notice("Opening module ");
+	notice("Opening module");
 	notice(buf);
 	dlerror();
  	if (! (so_handle = dlopen (buf, RTLD_LAZY)) )
 	{	error = dlerror();
 		warning(error);
-		tfree((void *) error);
+		// tfree((void *) error);
 		return 0;
 	}
 #ifdef NEED_USCORE
@@ -179,7 +196,7 @@ intern int mod_load (char *name, int argc, char *argv[])
 	{	error = dlerror();
 		warning(error);
 		dlclose (so_handle);
-		tfree((void *) error);
+		// tfree((void *) error);
 		return 0;
 	}
 
@@ -210,6 +227,7 @@ intern int mod_unload (int id)
 	if (! (mod = mod_search(id)) )
 		return 0;
 	list_remove(mod);
+	pth_cancel(mod -> thread_hnd);
 	tfree(mod);
 
 	/* Close the object */
@@ -217,7 +235,7 @@ intern int mod_unload (int id)
 	if (dlclose(mod -> so_hnd))
 	{	error = dlerror();
 		warning(error);
-		tfree((void *) error);
+		// tfree((void *) error);
 		return 0;
 	}
 

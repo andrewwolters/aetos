@@ -3,7 +3,7 @@
  *
  * event -- event handling subsystem
  *
- * $Id: event.c,v 1.2 2002/08/31 13:40:17 andrewwo Exp $
+ * $Id: event.c,v 1.3 2002/09/09 19:27:22 andrewwo Exp $
  */
 
 #include "aetos.h"
@@ -16,8 +16,8 @@
 
 #include "mem.h"
 #include "event.h"
+#include "utility.h"
 #include "error.h"
-#include "system.h"
 
 
 /* A lost extern */
@@ -88,9 +88,9 @@ intern event_t new_event (event_type type, ...)
 			ret -> e.nil.nil = NULL;
 			break;
 		case EvtIRCMsg:
-			ret -> e.ircmsg.pre = ckstrdup(va_arg(ap, char *));
-			ret -> e.ircmsg.cmd = ckstrdup(va_arg(ap, char *));
-			ret -> e.ircmsg.param = ckstrdup(va_arg(ap, char *));
+			ret -> e.ircmsg.pre = duplicate_string(va_arg(ap, char *));
+			ret -> e.ircmsg.cmd = duplicate_string(va_arg(ap, char *));
+			ret -> e.ircmsg.param = duplicate_string(va_arg(ap, char *));
 			break;
 		case EvtTimeout:
 			ret -> e.timeout.interval = va_arg(ap, unsigned long);
@@ -111,9 +111,9 @@ intern event_t copy_event (event_t event)
 	{	case EvtNil:
 			break;
 		case EvtIRCMsg:
-			ret -> e.ircmsg.pre = ckstrdup(event -> e.ircmsg.pre);
-			ret -> e.ircmsg.cmd = ckstrdup(event -> e.ircmsg.cmd);
-			ret -> e.ircmsg.param = ckstrdup(event -> e.ircmsg.param);
+			ret -> e.ircmsg.pre = duplicate_string(event -> e.ircmsg.pre);
+			ret -> e.ircmsg.cmd = duplicate_string(event -> e.ircmsg.cmd);
+			ret -> e.ircmsg.param = duplicate_string(event -> e.ircmsg.param);
 			break;
 		case EvtTimeout:
 			ret -> e.timeout.interval = event -> e.timeout.interval;

@@ -3,12 +3,13 @@
  *
  * modules -- support for modules in aetos
  *
- * $Id: modules.h,v 1.2 2002/08/31 13:40:17 andrewwo Exp $
+ * $Id: modules.h,v 1.3 2002/09/09 19:27:22 andrewwo Exp $
  */
 
 #ifndef AETOS_MODULES_H
 #define AETOS_MODULES_H
 
+#include <pth.h>
 #include <csp/list.h>
 #include <csp/slist.h>
 #include "common.h"
@@ -29,7 +30,7 @@ struct module_st
 	int major;				/* Major version number */
 	int minor;				/* Minor version number */
 	void *so_hnd;			/* Handle : pointer to the mod's shared object */
-	void *thread_hnd;		/* Handle of the thread bound to mod */
+	pth_t thread_hnd;		/* Handle of the thread bound to mod */
 };
 
 /* Routines for module administration */
@@ -39,6 +40,7 @@ int mod_unload (int id);
 int mod_initialize (char *name, int major, int minor);
 void mod_mainloop (void);
 void mod_exit (void);
+void mod_listing (char *dest);
 module_t mod_search (int id); 
 module_t mod_self (void); 
 int mod_self_id (void);

@@ -3,7 +3,7 @@
  *
  * Configuration header file for default values
  *
- * $Id: stdconfig.h,v 1.2 2002/08/31 13:40:17 andrewwo Exp $
+ * $Id: stdconfig.h,v 1.3 2002/09/09 19:27:23 andrewwo Exp $
  */
 
 #ifndef AETOS_STDCONFIG_H
@@ -24,5 +24,6 @@
 #define DEFAULT_REAL   "Aetos 0.1a"
 
 #define CONNECTION_PASSWORD "geheim"
+#define COMMAND_PREFIX  '.'
 
 #endif /* AETOS_STDCONFIG_H */

@@ -2,7 +2,7 @@
  * Aetos - the most aesthetically correct IRC bot ever
  *
  * Application top level section
- * $Id: main.c,v 1.2 2002/08/31 13:40:17 andrewwo Exp $
+ * $Id: main.c,v 1.3 2002/09/09 19:27:22 andrewwo Exp $
  */
 
 #include "common.h"
@@ -14,11 +14,11 @@
 #include <pth.h>
 
 // #include "resources.h"
-#include "options.h"
+#include "mem.h"
 #include "event.h"
 #include "modules.h"
-#include "mem.h"
-#include "system.h"
+#include "options.h"
+#include "utility.h"
 #include "error.h"
 
 /* Global declarations */
@@ -32,11 +32,13 @@ private void do_pong (event_t e)
 
 private void do_cmd (event_t e)
 {	char *argv[8];
-	char dest[20];
+	char *dest;
+	char **args = { NULL };
+	int mod_id;
 
-	notice("Doing do_cmd");
-/*	source_privmsg(e -> privmsg, &dest);
-	tokenize_string(e -> privmsg.mesg, &argv, 8);
+	dest = source_privmsg(e -> e.ircmsg);
+	// argv = tcalloc(8, sizeof(char *));
+	tokenize_string(e -> e.ircmsg.param, argv, 8);
 	if (is_command(argv[1], "quit"))
 	{	notice ("Receiving quit command");
 		irc_send_message (AETOS->serversocket, dest, "**poefzZz**");
@@ -45,42 +47,51 @@ private void do_cmd (event_t e)
 	{	if (argv[2])
 			mod_load (argv[2], 0, args);
 		else
-			irc_send_message (AETOS->serversocket, dest,
-				"[CORE] No module specified");
+			irc_send_message (AETOS->serversocket, dest, "[CORE] No module specified");
 	} else if (is_command(argv[1], "unload"))
 	{	if (argv[2])
-			mod_unload (argv[2]);
-		else
-			irc_send_message (AETOS->serversocket, dest,
-				"[CORE] No module specified");
+		{	mod_id = atoi(argv[2]);
+			/* first check if module id exists, then unload */
+			if (mod_id == 1)
+			{	irc_send_message (AETOS->serversocket, dest, "[CORE] Cannot unload the core");
+			} else if ((module_t) mod_search(mod_id))
+			{	mod_unload (mod_id);
+				irc_send_message (AETOS->serversocket, dest, "[CORE] Module unloaded");
+			} else
+			{	irc_send_message (AETOS->serversocket, dest, "[CORE] Please give the id of a loaded module");
+			}
+		} else
+		{	irc_send_message (AETOS->serversocket, dest, "[CORE] No module specified");
+		}
+	} else if (is_command(argv[1], "lsmod"))
+	{	mod_listing (dest);
 	} else if (is_command(argv[1], "help"))
 	{	irc_send_message (AETOS->serversocket, dest, "[CORE] Help:");
 		irc_send_message (AETOS->serversocket, dest, "[CORE] .quit   .load [mod]   .unload [mod]");
-	} */
+	}
+	tfree(*argv);
+	tfree(dest);
 }
 
-/*
- * TODO: Aestheticalize me!
- */
+/* Fill the global state table */
 private void setup_gst(gs_table *t)
 {	*t = tmalloc(sizeof(struct gs_table_st));
-	(*t) -> botname = ckstrdup(DEFAULT_NICK);
-	(*t) -> botusername = ckstrdup(DEFAULT_USER);
-	(*t) -> botrealname = ckstrdup(DEFAULT_REAL);
-	(*t) -> servername = ckstrdup(DEFAULT_SERVER);
+	(*t) -> botname = duplicate_string(DEFAULT_NICK);
+	(*t) -> botusername = duplicate_string(DEFAULT_USER);
+	(*t) -> botrealname = duplicate_string(DEFAULT_REAL);
+	(*t) -> servername = duplicate_string(DEFAULT_SERVER);
 	(*t) -> serverport = 6667;
 }
 
+/* A module must be able to grab the state table */
 export gs_table get_gst(void)
 {	return _aetos_gst;
 }
 
+/* Main event loop of the irc bot */
 private void aetos_main_loop ()
 {	message_rec *reply;
 	event_t event;
-
-//	mod_load("hello");
-//	mod_load("bye");
 
 	while (TRUE)
 	{	reply = irc_get_message (AETOS->serversocket);
@@ -139,5 +150,5 @@ int main (int argc, char **argv)
 	aetos_main_loop ();
 	
 	pth_exit(0);
-	exit(0); // Never reached, but stops compiler from complaining (fix: attributes)
+	exit(0); /* NOTREACHED but stops compiler from complaining (fix: attributes) */
 }

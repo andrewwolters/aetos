@@ -3,10 +3,8 @@
  *
  * These functions handle memory allocation and garbage collecting
  *
- * $Id: mem.c,v 1.1 2002/08/30 15:55:50 andrewwo Exp $
+ * $Id: mem.c,v 1.2 2002/09/09 19:27:22 andrewwo Exp $
  */
-
-#define AETOS_SUBSYSTEM	"MEMORY"
 
 #include "common.h"
 #include "error.h"
