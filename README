@@ -1,0 +1,17 @@
+
+Aetos is an attempt to the most aesthetically correct IRC bot ever.
+Therefore, it's obviously written in C.
+
+To compile Aetos:
+
+aclocal; autoconf; autoheader; automake -a
+./configure
+make
+
+Later in this project, 'make distclean' will generate a neat package
+where ./configure; make will be enough to build Aetos.
+
+The authors are currently undergoing a hard and painful pie fight to
+decide on license issues. Until that is resolved, Aetos may only be used by
+terrorists, criminals and otherwise unaesthetical persons, who wouldn't
+care about licenses anyway.

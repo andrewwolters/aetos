@@ -1,0 +1,53 @@
+# Own m4 macros inclusions
+dnl m4_include([config/prefix_uscore.m4])dnl
+
+# Process this file with autoconf to produce a configure script
+AC_INIT(Aetos, 0.1a, bugreport@aetos.sourceforge.net)
+AC_CONFIG_AUX_DIR([config])
+AC_CONFIG_SRCDIR([src/main.c])
+
+AM_INIT_AUTOMAKE(aetos,0.1a)
+AM_CONFIG_HEADER([config.h])
+
+# Check for programs
+AC_PROG_CC
+dnl AC_PROG_INSTALL
+AC_PROG_RANLIB
+
+# Check for libraries
+AC_CHECK_PTH(1.4.0)
+dnl AC_CHECK_LIB([c], [fprintf])
+dnl AC_CHECK_LIB([pq], [PQconnectdb])
+dnl AC_CHECK_LIB([dl],[dlopen])
+dnl AC_REPLACE_FUNCS([blaaaaat])
+
+# Check for header files
+AC_HEADER_STDC
+AC_HEADER_TIME
+AC_CHECK_HEADERS([stdarg.h varargs.h], [],dnl
+	[AC_MSG_ERROR([variadic functions are necessary in Aetos])])
+AC_CHECK_HEADERS([sys/param.h sys/socket.h])
+
+# Check for structures, typedefs and compiler characteristics
+AC_C_CONST
+AC_TYPE_SIZE_T
+AC_STRUCT_TM
+
+# Check for library functions
+dnl AC_FUNC_ERROR_AT_LINE
+dnl AC_FUNC_MALLOC
+AC_CHECK_FUNCS([bzero memset snprintf gethostbyname])
+AC_CHECK_FUNCS([strcasecmp strrchr strstr strdup strsep])
+
+# Miscelaneous tests
+AETOS_SYS_PREFIX_USCORE
+
+# Feature select
+dnl AETOS_FEATURE_THREADS
+
+# Output files
+AC_CONFIG_FILES([Makefile
+                 src/Makefile
+				 lib/Makefile
+                 lib/irc/Makefile])
+AC_OUTPUT

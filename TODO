@@ -1,0 +1,42 @@
+This is the TODO list for the aetos irc bot.
+
+- modules system [-> Andrew]
+- support for logging [-> Pieter-Paul]
+- irc lib (ie implement RFC 2812) [-> Jaap]
+- threading [-> Andrew]
+- user authentication
+- rc file (ie implement doc/developers/resources.doc)
+- make script which generates /mod/mod.h and /src/efuns.h
+
+
+
+scratchbook
+----------
+
+lprintf/dprintf like functions for logging and irc messaging
+
+variadic functions:
+  
+  #if HAVE_STDARG_H
+  int function (const char *format, ...)
+  #else
+  int function (format, va_alist)
+     const char *format;
+     va_dcl
+  #endif
+  {  va_alist ap;
+     char *arg;
+     xva_start(ap, format);
+     ...
+     arg = va_arg(ap, char *);
+     ...
+     va_end(ap);
+     return arg : strlen(arg) ? 0;
+  }
+
+rcfile by example:
+
+[section]
+var1 = value1			# Single value (string or int)
+var2 = [ a, b, c, d ]		# Array of strings/ints
+var3 = { field1, field2 }	# Structure of strings/ints
