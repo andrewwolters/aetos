@@ -1,6 +1,6 @@
 /*
  * A "social" module for Aetos 
- * $Id: emote.c,v 1.3 2004/09/21 13:43:23 semprini Exp $
+ * $Id: emote.c,v 1.4 2004/09/21 15:29:50 semprini Exp $
  */
 
 #include <stdlib.h>
@@ -13,9 +13,9 @@
 
 static efun_tbl efuns;
 static int fd;
-static char *channel, *nick;
 PGconn *db_conn;
-  
+gs_table gst; 
+
 void emote_send (char *dest, char *msg_template, char *first, char *second)
 {
 	char *first_s, *msg;
@@ -88,28 +88,34 @@ static void do_privmsg(event_t event)
 		if (target == NULL)
 		{
 			emote_send (source, PQgetvalue (res, 0, 1), source, target);
-			emote_send (channel, PQgetvalue (res, 0, 2), source, target);
+			emote_send (gst -> channelname, PQgetvalue (res, 0, 2), source, target);
 		}
 		else
 		{
-			if (strcasecmp (source, target) == 0)
+			int i, target_exists = 0;
+			for (i = 0; i < gst -> nr_names; i++)
+				if (strcasecmp (gst -> names [i], target) == 0)
+					target_exists = -1;
+			if (!target_exists)
+				efuns -> send_message (fd, source, "I can't find any person of that name!");	
+			else if (strcasecmp (source, target) == 0)
 			{
 				emote_send (source, PQgetvalue (res, 0, 3), source, target);
-				emote_send (channel, PQgetvalue (res, 0, 4), source, target);
+				emote_send (gst -> channelname, PQgetvalue (res, 0, 4), source, target);
 			}
-			else if (strcasecmp (target, nick) == 0)
+			else if (strcasecmp (target, gst -> botname) == 0)
 			{
 				emote_send (source, PQgetvalue (res, 0, 5), source, target);
-				emote_send (channel, PQgetvalue (res, 0, 6), source, target);
+				emote_send (gst -> channelname, PQgetvalue (res, 0, 6), source, target);
 			}
 			else
 			{
 				emote_send (source, PQgetvalue (res, 0, 1), target, source);
 				emote_send (target, PQgetvalue (res, 0, 0), source, target);
 				if (PQgetvalue (res, 0, 7) [0] == 't')
-					emote_send (channel, PQgetvalue (res, 0, 2), source, target);
+					emote_send (gst -> channelname, PQgetvalue (res, 0, 2), source, target);
 				else
-					emote_send (channel, PQgetvalue (res, 0, 2), target, source);
+					emote_send (gst -> channelname, PQgetvalue (res, 0, 2), target, source);
 			}
 		}
 	}
@@ -121,14 +127,12 @@ static void do_privmsg(event_t event)
 }
 
 void *emote_init (efun_tbl tbl, int argc, char **argv)
-{	gs_table gst; 
+{
 	efuns = tbl;
 	gst = efuns -> get_gst();
 	fd = gst -> serversocket;
-	channel = strdup (gst -> channelname);
-	nick = strdup (gst -> botname);
 
-	efuns -> mod_initialize ("emote", 0, 2);
+	efuns -> mod_initialize ("emote", 1, 0);
 	efuns -> add_callback (EvtPrivmsgMask, do_privmsg);
 	efuns -> send_message (fd, gst -> channelname, "Emotions are go green, repeat, go green.");
 

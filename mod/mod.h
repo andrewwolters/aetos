@@ -3,7 +3,7 @@
  *
  * modules -- support for modules in aetos
  *
- * $Id: mod.h,v 1.3 2002/09/14 23:14:03 semprini Exp $
+ * $Id: mod.h,v 1.4 2004/09/21 15:29:50 semprini Exp $
  */
 
 #ifndef AETOS_MOD_H
@@ -33,6 +33,8 @@ struct gs_table_st
 		char *channelname;					/* Name of channel connected to */
     unsigned short serverport;      /* Port of irc server */
     int serversocket;           /* R/W socket */
+		char **names;					/* People on channel */
+		int nr_names;					/* Number of people on channel */
 };
 
 typedef void (*callback_proc) (event_t);
