@@ -1,6 +1,6 @@
 /*
  * A test "hello world" module for Aetos
- * $Id: hello.c,v 1.3 2002/09/14 23:14:03 semprini Exp $
+ * $Id: hello.c,v 1.4 2004/09/21 13:16:59 semprini Exp $
  */
 
 #define MOD_NAME hello
@@ -28,7 +28,7 @@ void *hello_init (efun_tbl tbl, int argc, char **argv)
 	gst = efuns -> get_gst();
 	fd = gst -> serversocket;
 
-	efuns -> mod_initialize ("hello", 0, 1);
+	efuns -> mod_initialize ("hello", 1, 0);
 	efuns -> add_callback (EvtPrivmsgMask, do_privmsg);
 	efuns -> send_message (fd, gst -> channelname, "Hello World!");
 

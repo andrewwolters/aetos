@@ -7,8 +7,8 @@ MOD    = bach.mod
 
 # Compiler, Linker Defines
 CC      = gcc
-CFLAGS  = -Wall -O1 -fPIC -I../../.. -I/usr/pkg/include
-LIBPATH = -L. -L/usr/pkg/lib
+CFLAGS  = -g -Wall -O1 -fPIC -I../../.. -I/usr/local/include
+LIBPATH = -L. -L/usr/local/lib
 LDFLAGS = -shared $(LIBPATH) $(LIBS)
 CFDEBUG = -ansi -pedantic -Wall -g -DDEBUG $(LDFLAGS)
 RM      = rm -f
