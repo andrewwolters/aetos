@@ -4,7 +4,7 @@
  *
  * Inline functions (implemented as macros) for double linked lists.
  *
- * $Id: list.h,v 1.1 2002/08/30 16:04:11 andrewwo Exp $
+ * $Id: list.h,v 1.2 2002/09/10 13:45:51 andrewwo Exp $
  * ts=4
  */
 
@@ -67,7 +67,7 @@ struct															\
 #define list_foreach(list, var)									\
 	for((var) = (list)->first; (var); (var) = (var)->_dl_link_part.next)
 
-#define list_delete(list, type, free_func)						\
+#define list_empty(list, type, free_func)						\
 	while((list) != NULL)										\
 		(struct type *_dl_cur = (list)->first,					\
 		 (list)->first = (list)->first->_dl_link_part.next,		\
