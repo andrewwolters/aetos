@@ -1,6 +1,6 @@
 /*
  * Documentation for the Aetos module subsystem
- * $Id: modules.doc,v 1.1 2002/08/30 16:07:22 andrewwo Exp $
+ * $Id: modules.doc,v 1.2 2002/09/10 14:21:10 andrewwo Exp $
  */
 
 Writing Aetos Modules
@@ -12,11 +12,17 @@ Aetos. Modules for Aetos are normally written in C, but an 'any scripting
 language' module based on pipes will be built soon. This mod enables you to
 write in any script language as long as there is an appropriate interpreter.
 
+Every module is handled by a thread. This means that when you write your
+module, it is like writing a normal application as if there is no 'aetos'
+mother wrapped around your module. Aetos then provides some system call like
+functions via a table with pointers to functions declared in aetos self.
+
 Wanrning, the module system is still in an intensive development phase. Check
 for changes often!
 
 I will include a file with the changes (when some struct name changes or
 something like that).
+
 
 How to program a module
 -----------------------
@@ -24,11 +30,11 @@ How to program a module
 In order to write an Aetos API compliant module, you must do the following
 things:
 
-   1.  Add your directory in the 'mod/' dir. Copy the skeleton files from
+(hint) Add your directory in the 'mod/' dir. Copy the skeleton files from
        mod/skel and modify them: substitute every occurence of SKEL with
        you mod name.
 
-   2.  Include this in your module code:
+   1.  Include this in your module code:
 
          #define MOD_NAME <module name>
 
@@ -36,80 +42,133 @@ things:
 
        Order is important, the define must precede the include.
 
-   3.  The module will need an entry point, a boilerplate. Aetos' module loader
-       bootstraps to
+   2.  The module will need an entry point, where all the life begins. Aetos'
+       module loader bootstraps in two stages to
 
-         char *<module name>_init (efun_tbl *table, int argc, char *argv[])
+         char *<module name>_init (efun_tbl table, int argc, char *argv[])
 
        where:
-         *table    pointer to the table with external functions. Via this table
+         table     pointer to the table with external functions. Via this table
                    you can access functions from Aetos. It is recommended that
                    you declare a global variable, like
-                      efun_tbl *efuns;
+                      efun_tbl efuns;
                    and assign table to efuns, so it is possible to access the 
                    functions anywhere in the code.
          argc      argument count
          *argv[]   argument vector
 
-   4.  There are several administrative things which must be done in the init
+   3.  There are several administrative things which must be done in the init
        function.
-         o Register module through
+         o Initialize the module through
 
-             mod_register (<module name>, <major ver>, <minor ver>)
+             mod_initialize (<module name>, <major ver>, <minor ver>)
 
+           This function ensures that the module is registered with the module
+           loading system and sets up some thread specific data.
          o Add callbacks if necessary.
          o Other initialisation stuff.
-         o If a NULL is returned, the module subsystem assumes that the init was
-           succesful, in other cases, ie a failure, the return value is an error
-           message.
+         o Enter the main module loop with
 
-   5.  A second mandatory function is the so called fini function; this funcion
-       is invoked when you unload the module.
+             mod_mainloop();
 
-         char *<module name>_fini ()
-
-       Here, the opposite of init() must be done:
-         o Remove callbacks.
-         o Other deinit stuff.
-         o And again, if a NULL is returned, the subsystem assumes that fini was
-           successful, otherwise, the return value is an error message.
+   4.  That's it! Happy hacking... ;)
 
 
 Core functions available to any module
 --------------------------------------
 
-- int mod_register (char *name, int major, int minor)
-     name     module name
-     major    major version number
-     minor    minor version number
+Module related:
 
-- int mod_unregister (char *name);
-     name     module name
+o int mod_initialize (char *name, int major, int minor)
+  -  name     module name
+  -  major    major version number
+  -  minor    minor version number
 
-- int mod_rename (char *name, char *new);
-     name     old module name
-     new      new module name
+  This function intializes the module.
 
-- void add_callback (char *name, acs_event_mask mask, callback_proc proc);
-     name     module name
-     mask     event mask
-     proc     callback function
+o void mod_mainloop (void)
 
-- void remove_callback (char *name, acs_event_mask mask, callback_proc proc);
-     name     module name
-     mask     event mask
-     proc     callback function
+  The main module event loop. This function fetches events from the queue, and
+  dispatches them to the appropriate callback functions.
 
-- void remove_all_callbacks (char *name);
-     name     module name
+o void mod_exit (void)
 
-- void add_actiontab (acs_action_table table[]);
-     table    action table
+  Exit point for modules. If you which to prematurely exit the module, then
+  this is the way. Never use any other method for exiting, this will negatively
+  affect the core.
 
-- void send_message (int fd, char *dest, char *mesg);
-     fd       fd for the irc connection
-     dest     destination channel/user
-     mesg     the message itself
+
+Message and event related:
+
+o void get_from_event (event_t event, void **ev_part)
+  -  event    the event_t
+  -  ev_part  part of the event
+
+  This function is quite complex: use this function when you want to extract
+  the actual event from the event_t (which should be treated as an opaque
+  type). Ev_part is then a pointer to the event part you provide where the
+  function will put the requested part according to the type of the event
+  specified in event_t.
+
+o void send_message (int fd, char *dest, char *mesg)
+  -  fd       fd for the irc connection
+  -  dest     destination channel/user
+  -  mesg     the message itself
+
+  Well, nuf' said, I suppose.
+
+o char *source_privmsg (ircmsg_evt ev)
+  -  ev       the ircmsg event part
+
+  Extracts the source of the message, which is either the channel, or a person.
+
+o int is_command (char *str, char *cmd)
+  -  str      a string
+  -  cmd      a command
+
+  Checks if str is aetos command <cmd>. Returns a boolean.
+
+
+Adding and removing callbacks:
+
+o void add_callback (event_mask mask, callback_proc proc);
+  -  mask     event mask
+  -  proc     callback function
+
+o void remove_callback (event_mask mask, callback_proc proc);
+  -  mask     event mask
+  -  proc     callback function
+
+
+Convenience functions for string handling
+
+o void tokenize_string (char *, char **, int)
+  -
+  -
+  -
+
+o char *duplicate_string (char *str)
+  -  str      duplicate this string
+
+  This function returns a newly allocated string, which is a duplicate of <str>
+
+
+Memory utilisation:
+
+o void *tmalloc (size_t size)
+o void *trealloc) (void *ptr, size_t size)
+o void tfree) (void *ptr)
+o void *tcalloc) (int num, size_t size)
+
+  These are the Aetos versions of the standard *alloc functions.
+
+
+Miscelaneous:
+
+o gs_table get_gst (void)
+
+  Return the global state table with info about the bot's name, the channel,
+  the server, etc.
 
 
 Events available
