@@ -1,13 +1,16 @@
 This is the TODO list for the aetos irc bot.
+[ - is on the whish list ]
+[ + is implemented (the basics) ]
 
-- modules system [-> Andrew]
++ modules system [-> Andrew]
 - support for logging [-> Pieter-Paul]
-- irc lib (ie implement RFC 2812) [-> Jaap]
-- threading [-> Andrew]
++ irc lib (ie implement RFC 2812) [-> Jaap]
++ threading [-> Andrew]
 - user authentication
 - rc file (ie implement doc/developers/resources.doc)
 - make script which generates /mod/mod.h and /src/efuns.h
-
+- resource hash table
+- memory stats
 
 
 scratchbook
