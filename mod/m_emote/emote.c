@@ -1,11 +1,11 @@
 /*
  * A "social" module for Aetos 
- * $Id: emote.c,v 1.2 2002/11/02 13:01:45 semprini Exp $
+ * $Id: emote.c,v 1.3 2004/09/21 13:43:23 semprini Exp $
  */
 
 #include <stdlib.h>
 #include <string.h>
-#include "pgsql/libpq-fe.h"
+#include "libpq-fe.h"
 
 #define MOD_NAME hello
 
@@ -29,7 +29,7 @@ void emote_send (char *dest, char *msg_template, char *first, char *second)
 		else
 			asprintf (&msg, msg_template, first == NULL ? "Henk de Frits" : first);
 		efuns -> send_message (fd, dest, msg);
-		free (msg);
+		efuns -> tfree (msg);
 	}
 	else
 	{
@@ -51,17 +51,17 @@ static void do_privmsg(event_t event)
 	cmd = (char *) malloc (strlen (argv [1]) + 1);
 	if (sscanf (argv [1], ".%s", cmd) != 1)
 	{
-		free (cmd);
+		efuns -> tfree (cmd);
 		return;
 	}
 	source = (char *) malloc (strlen (ircmsg -> pre) + 1);
 	if (sscanf (ircmsg -> pre, "%[^!]!%*s", source) != 1)
 	{
-		free (source);
-		free (cmd);
+		efuns -> tfree (source);
+		efuns -> tfree (cmd);
 		return;
 	}
-	target = argv [2];
+	target = argv [2] == NULL ? NULL : efuns -> duplicate_string (argv [2]);
 
 	asprintf (&query, "SELECT target_message, source_message, other_message, "
 	                  "refl_source_message, refl_other_message, "
@@ -76,11 +76,11 @@ static void do_privmsg(event_t event)
 		asprintf (&errmsg, "Database error: %s", PQresultErrorMessage (res));
 		efuns -> send_message (fd, dest, errmsg);
 		PQclear (res);
-		free (target);
-		free (source);
-		free (errmsg);
-		free (cmd);
-		free (query);
+		efuns -> tfree (target);
+		efuns -> tfree (source);
+		efuns -> tfree (errmsg);
+		efuns -> tfree (cmd);
+		efuns -> tfree (query);
 		return;
 	}
 	if (PQntuples (res) > 0)
@@ -114,10 +114,10 @@ static void do_privmsg(event_t event)
 		}
 	}
 	PQclear (res);
-	free (target);
-	free (source);
-	free (cmd);
-	free (query);
+	efuns -> tfree (target);
+	efuns -> tfree (source);
+	efuns -> tfree (cmd);
+	efuns -> tfree (query);
 }
 
 void *emote_init (efun_tbl tbl, int argc, char **argv)
@@ -128,7 +128,7 @@ void *emote_init (efun_tbl tbl, int argc, char **argv)
 	channel = strdup (gst -> channelname);
 	nick = strdup (gst -> botname);
 
-	efuns -> mod_initialize ("emote", 0, 1);
+	efuns -> mod_initialize ("emote", 0, 2);
 	efuns -> add_callback (EvtPrivmsgMask, do_privmsg);
 	efuns -> send_message (fd, gst -> channelname, "Emotions are go green, repeat, go green.");
 
@@ -138,7 +138,7 @@ void *emote_init (efun_tbl tbl, int argc, char **argv)
   { char *errmsg;
     asprintf (&errmsg, "Database error: %s", PQerrorMessage (db_conn));
     efuns -> send_message (fd, gst -> channelname, errmsg);
-    free (errmsg);
+    efuns -> tfree (errmsg);
     return "Error";
 	}
 
