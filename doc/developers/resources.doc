@@ -1,0 +1,57 @@
+/*
+ * Documentation for the resources interface
+ * $Id: resources.doc,v 1.1 2002/08/30 16:07:22 andrewwo Exp $
+ */
+
+/* DRAFT : This document will most likely change. As this system is not yet
+           implemented, the function proto's are subject to change too. */
+
+Using the resources interface
+=============================
+
+Function overview
+-----------------
+
+- int hash_resource_file (const char *filename);
+
+Reads the resource file specified by filename and stores the contents in a
+nice, fast and efficient tree like structure for later lookup. New hashes
+overwrite old values in the structure. Function returns -1 on error and sets
+the system wide errno variable.
+
+- int query_resource (const char *query, ...);
+
+Queries the resource tree with the specified query. The results are stored in
+varargs depending on the type of results the resource gives. The types are:
+string, int, array, struct.
+
+- int enter_resource (const char *spec, ...);
+
+Enters a resource in the tree according to spec. The actual value of the
+resource is given through varargs.
+
+
+Querying the rc system
+----------------------
+One may query the rc system by using query_resource() with the apropriate
+query. The construction of a query is much like a directory structure, where
+the leftmost identifier specifies the toplevel rc-space, and each subsequent
+id specifies a sublevel. Further specification can be done in case of a
+resource struct: each individual field in the struct is queryable.
+
+The resource tree consists of a global namespace, and each [section] has its
+own rc-space. Sections with the same name from multiple files are combined,
+the latest hash will overwrite the old value.
+
+For example:
+network : servername
+-> will query the variable servername in section network of rc-space Aetos.
+
+mod_bach : dbname
+-> will query the var dbname from mod_bach, which happens to be a module.
+
+
+Entering the rc system
+----------------------
+A resource can be entered in the system via the enter_resource() function. This
+function accepts a spec which is constructed the same way as queries.

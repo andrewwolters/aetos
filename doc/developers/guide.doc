@@ -1,0 +1,129 @@
+/*
+ * Programming guide for Aetos developers
+ * $Id: guide.doc,v 1.1 2002/08/30 16:07:22 andrewwo Exp $
+ */
+
+/* NOTE: Jaap, we moeten nog even bekijken wat voor 'stijl' esthetisch correct
+         is voor aetos. Dit is niet zo heel belangrijk maar het lijkt me voor
+         een release wel aardig om dat 'Aesthetically Correct'-heid waar te
+         maken. */
+/* NOTE: Er moeten nog wat van die copyright dingen komen boven sources */
+
+
+Programming Guide
+=================
+
+So you want to develop for The Incredible IRCbot Aetos, aka the Most
+Aesthetically Correct Bot Ever? Good! Then I'll explain to you some things
+about how things go in Aetos. Note that as Aetos is not even beta some items
+may change a bit. There will be/is a Change document which states the changes
+during Aetos' pre beta stage and which parts of which documents you should read
+again. Also, the debate goes on about what is 'aesthetically correct', so you
+might find discrepancies between this doc and the real world, or some
+inconsitenties.
+
+This document will act as a guide for programming on the core system, several
+utility systems, and of course, the module system. It gives some tips and
+tricks, useful macros, and a preferred style. If your programming style is
+inherently different from Aetos' style, then don't worry, just program away.
+But as Aetos is supposed to be 'aesthetically correct', expect your code to
+be aestheticalized by others soon or later.
+
+
+Implementation overview
+-----------------------
+Aetos is divided into several parts, or 'subsystems'. Each of these subsystems
+provide some facilities, like error logging, or module loading, to the main
+system, also called the core or construct. Most systems are core subsystems:
+they provide fundamental facilities to this 'core', and are really tied up
+into it. Everything which is not fundamental, ie. application running does not
+depend on it, go in the modules. These modules are also subsystems, mostly
+interaction systems, but there are also utility systems on which other systems
+depend.
+
+One difficulty of programming on Aetos is that Aetos is threaded. In principle,
+every module runs in it's own thread. Utility systems seem to be an exception
+on this rule, but even they are run in a thread. After they've registered their
+functions, the thread exits, but the functions are still accessible.
+
+There are currently 6 core subsystems:
+ *  the construct
+ |
+ o  command line options
+ o  resource lookup system
+ o  memory management
+ o  event system
+ o  module loader   - mod's are loaded from here
+ o  error logger                 |
+                                 |
+                               m_plugin
+                               m_bach
+                               etc.
+
+Modules on the todo list:
+ - m_users      user management on irc
+ - m_telnet     telnet login on Aetos for registered users
+ - m_logger     irc logging facility
+ 
+
+Programming details
+-------------------
+ o  A source file is prepended by:
+
+/*
+ * Aetos - the most aesthetically correct IRC bot ever
+ * [copyright notice]
+ *
+ * [description of this source, or header]
+ *
+ * $Id: guide.doc,v 1.1 2002/08/30 16:07:22 andrewwo Exp $
+ */
+
+ o  Important include for all sources:
+
+#include "aetos.h" /* This must be the first include, followed by a blank */
+
+    Look at common.h and see which system and /usr(/local) includes are
+    already included. You won't have to include them again, especially because
+    common.h includes them conditionally based on configure script and includes
+    alternatives if necessary. 
+    System includes come first, then network includes. After this own library
+    includes, followed by a blank line and the local includes. Includes must be
+    sorted.
+
+ o  Comments:
+
+/*
+ * VERY important single line comment
+ */
+
+/* Most single line comment look like his */
+
+/*
+ * This is a multiline comment with a long text. Make real sentences and format
+ * them as a paragraph.
+ */
+
+ o  Try not to make the C lines longer than 80 characters.
+
+ o  For single/double linked lists, single/double linked deque-s, rings, use
+    inline functions from the CrystalRealms Software Platform library. Look
+    for more information in [build_dir]/lib/csp/*.h Those macros are C++
+    template like functions. They are easy to read, easy in use, and are the
+    most efficient way of 'doing' those datatypes.
+
+ o  Use /* FALLTHROUGH */ when falling through on cascading elements in a
+    switch. Use /* NOTREACHED */ for code which is (or should) normaly not
+    (be) reached
+
+ o  Use aetos_malloc in stead of malloc. Not only is this function 'memory
+    safe' and 'thread safe', Aetos has an own memory management system with
+    garbage collection and stuff. In general for memory functions, use the
+    aetos_* versions.
+
+ o  Take a look at the aetos_str* functions for safe and easy string
+    manipulation.
+
+ o  Take a look at the error macros.
+
+ o  Note that most files are beautiful only when tabstop is set to 4.

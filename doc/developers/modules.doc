@@ -1,0 +1,118 @@
+/*
+ * Documentation for the Aetos module subsystem
+ * $Id: modules.doc,v 1.1 2002/08/30 16:07:22 andrewwo Exp $
+ */
+
+Writing Aetos Modules
+=====================
+
+One nice feature of Aetos is that you can build your own modules. Aetos is
+capable of loading and unloading them at runtime, hence, you need not quit
+Aetos. Modules for Aetos are normally written in C, but an 'any scripting
+language' module based on pipes will be built soon. This mod enables you to
+write in any script language as long as there is an appropriate interpreter.
+
+Wanrning, the module system is still in an intensive development phase. Check
+for changes often!
+
+I will include a file with the changes (when some struct name changes or
+something like that).
+
+How to program a module
+-----------------------
+
+In order to write an Aetos API compliant module, you must do the following
+things:
+
+   1.  Add your directory in the 'mod/' dir. Copy the skeleton files from
+       mod/skel and modify them: substitute every occurence of SKEL with
+       you mod name.
+
+   2.  Include this in your module code:
+
+         #define MOD_NAME <module name>
+
+         #include "../mod.h"
+
+       Order is important, the define must precede the include.
+
+   3.  The module will need an entry point, a boilerplate. Aetos' module loader
+       bootstraps to
+
+         char *<module name>_init (efun_tbl *table, int argc, char *argv[])
+
+       where:
+         *table    pointer to the table with external functions. Via this table
+                   you can access functions from Aetos. It is recommended that
+                   you declare a global variable, like
+                      efun_tbl *efuns;
+                   and assign table to efuns, so it is possible to access the 
+                   functions anywhere in the code.
+         argc      argument count
+         *argv[]   argument vector
+
+   4.  There are several administrative things which must be done in the init
+       function.
+         o Register module through
+
+             mod_register (<module name>, <major ver>, <minor ver>)
+
+         o Add callbacks if necessary.
+         o Other initialisation stuff.
+         o If a NULL is returned, the module subsystem assumes that the init was
+           succesful, in other cases, ie a failure, the return value is an error
+           message.
+
+   5.  A second mandatory function is the so called fini function; this funcion
+       is invoked when you unload the module.
+
+         char *<module name>_fini ()
+
+       Here, the opposite of init() must be done:
+         o Remove callbacks.
+         o Other deinit stuff.
+         o And again, if a NULL is returned, the subsystem assumes that fini was
+           successful, otherwise, the return value is an error message.
+
+
+Core functions available to any module
+--------------------------------------
+
+- int mod_register (char *name, int major, int minor)
+     name     module name
+     major    major version number
+     minor    minor version number
+
+- int mod_unregister (char *name);
+     name     module name
+
+- int mod_rename (char *name, char *new);
+     name     old module name
+     new      new module name
+
+- void add_callback (char *name, acs_event_mask mask, callback_proc proc);
+     name     module name
+     mask     event mask
+     proc     callback function
+
+- void remove_callback (char *name, acs_event_mask mask, callback_proc proc);
+     name     module name
+     mask     event mask
+     proc     callback function
+
+- void remove_all_callbacks (char *name);
+     name     module name
+
+- void add_actiontab (acs_action_table table[]);
+     table    action table
+
+- void send_message (int fd, char *dest, char *mesg);
+     fd       fd for the irc connection
+     dest     destination channel/user
+     mesg     the message itself
+
+
+Events available
+----------------
+
+See events.doc for more information on the events subsystem.
