@@ -3,7 +3,7 @@
  *
  * Configuration header file for default values
  *
- * $Id: stdconfig.h,v 1.3 2002/09/09 19:27:23 andrewwo Exp $
+ * $Id: stdconfig.h,v 1.4 2003/12/05 21:43:07 semprini Exp $
  */
 
 #ifndef AETOS_STDCONFIG_H
@@ -17,7 +17,7 @@
 #endif /* MAXHOSTNAMELEN */
 
 #define DEFAULT_CHANNEL "#aetos"
-#define DEFAULT_SERVER "irc.kerguelen.org"
+#define DEFAULT_SERVER "irc.fluim.net"
 #define DEFAULT_PORT   6667
 #define DEFAULT_NICK   "aetos"
 #define DEFAULT_USER   "vaguebot"

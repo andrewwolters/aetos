@@ -1,6 +1,6 @@
 /*
  * Bach module for aetos
- * $Id: bach.c,v 1.3 2003/04/09 11:39:46 semprini Exp $
+ * $Id: bach.c,v 1.4 2003/12/05 21:43:07 semprini Exp $
  */
 
 #include <stdio.h>
@@ -13,6 +13,7 @@
 
 #include "../mod.h"
 
+int last_cantata;
 static efun_tbl efuns;
 static int fd;
 PGconn *db_conn;
@@ -46,6 +47,31 @@ static void do_privmsg (event_t event)
 	dest = efuns -> source_privmsg (*ircmsg);
 	argv [2] = NULL;
 	efuns -> tokenize_string (ircmsg -> param, argv, 3);
+	if (efuns -> is_command (argv [1], "kruidvat"))
+	{
+		int cantata;
+		if (argv [2] == NULL)
+		{
+			if (last_cantata == -1)
+			{
+				efuns -> send_message (fd, dest, "Sorry, what cantata do you mean?");
+				return;
+			}
+			cantata = last_cantata;
+		}
+		else
+			sscanf (argv [2], "%d", &cantata);	
+		asprintf (&query, "SELECT box, cd FROM cantatas WHERE bwv = %d", cantata);
+		res = PQexec (db_conn, query);
+		if (PQresultStatus (res) != PGRES_TUPLES_OK)
+			efuns -> send_message (fd, dest, "Whoops!");
+		asprintf (&message, "That cantata (BWV %d) is in Kruidvat box %s on CD %s.", cantata, PQgetvalue (res, 0, 0), PQgetvalue (res, 0, 1));
+		efuns -> send_message (fd, dest, message);
+		efuns -> tfree (query);
+		efuns -> tfree (message);
+		PQclear (res);
+		return;
+	}
   if (!(efuns -> is_command (argv [1], "cantata")))
     return;
 	
@@ -134,13 +160,20 @@ static void do_privmsg (event_t event)
 		efuns -> send_message (fd, dest, "Whoops!");
 	else
 	{
-		int i = random () % PQntuples (res);
-		asprintf (&message, "Try '%s' (BWV %s)", PQgetvalue (res, i, 1), PQgetvalue (res, i, 0));
-		efuns -> send_message (fd, dest, message);
-		efuns -> tfree (message);
+		if (PQntuples (res) > 0)
+		{
+			int i = random () % PQntuples (res);
+			asprintf (&message, "Try '%s' (BWV %s)", PQgetvalue (res, i, 1), PQgetvalue (res, i, 0));
+			last_cantata = atoi (PQgetvalue (res, i, 0));
+			efuns -> send_message (fd, dest, message);
+			efuns -> tfree (message);
+		}
+		else
+			efuns -> send_message (fd, dest, "Sorry, no cantatas have survived for this day.");
 	}
 	efuns -> tfree (query);
 	efuns -> tfree (dayname);
+	PQclear (res);
 }
 
 char *bach_init (efun_tbl table, int argc, char **argv)
@@ -148,6 +181,7 @@ char *bach_init (efun_tbl table, int argc, char **argv)
 	efuns = table;
 	gst = efuns -> get_gst ();
 	fd = gst -> serversocket;
+	last_cantata = -1;
 	efuns -> mod_initialize ("bach", 1685, 1750);
 	efuns -> add_callback (EvtPrivmsgMask, do_privmsg);
 	efuns -> send_message (fd, gst -> channelname, "Jauchzet, frohlocket!");
