@@ -13,7 +13,9 @@ dnl AC_PROG_INSTALL
 AC_PROG_RANLIB
 
 # Check for libraries
-AC_CHECK_PTH(1.4.0)
+dnl AC_CHECK_PTH(1.4.0)
+# provisorical check for pth 
+AC_CHECK_LIB(pth,pth_init)
 dnl AC_CHECK_LIB(c,fprintf)
 dnl AC_CHECK_LIB(pq,PQconnectdb)
 dnl AC_CHECK_LIB(dl,dlopen)
